@@ -1,58 +1,75 @@
-Отлично! Раз вы уже нашли свой логин (`kotokhin98-netizen`) и, надеюсь, успешно запушили код (или готовы это сделать), давайте сделаем ваш проект красивым.
+# hello-rust
 
-Хороший `README.md` — это лицо проекта. Для учебного проекта по Rust и Docker важно показать, что вы понимаете, **зачем** используете эти технологии (например, маленький размер образа).
+Учебный проект с CI/CD на GitHub Actions для Rust-приложения с публикацией в GHCR.
 
-Вот готовый текст для вашего файла.
+## 📌 Цель работы
 
-### Инструкция:
-1. Создайте в папке `hello-rust` файл с именем `README.md`.
-2. Скопируйте код ниже и вставьте его в этот файл.
-3. Сохраните, добавьте в git и отправьте на GitHub.
+Научиться публиковать Docker-образ в **GHCR (GitHub Container Registry)** автоматически при push в `main`. Это превращает CI в **CI/CD** — код не только проверяется, но и превращается в готовый к развёртыванию артефакт.
 
-```markdown
-#  Hello Rust CI/CD Pipeline
+## 🎯 Что делает CI/CD
 
-Пример минималистичного приложения на **Rust**, демонстрирующий настройку **CI/CD пайплайна** через GitHub Actions и создание оптимизированного **Docker-образа**.
+При каждом push в `main`:
 
-## 🚀 О проекте
-
-Этот проект показывает преимущества использования Rust в контейнерах:
-- **Многоступенчатая сборка (Multi-stage build):** Компиляция в тяжелом образе `rust:slim`, запуск в легком `debian:stable-slim`.
-- **Оптимизация:** Бинарник сжат (`opt-level = "z"`, `LTO`, `strip`), что делает финальный образ extremely small (~15-20 МБ) по сравнению с аналогами на Java или Python.
-- **Автоматизация:** При каждом push запускаются тесты, линтеры (Clippy) и проверка форматирования.
+- **Format check** — `cargo fmt --check`
+- **Lint** — `cargo clippy --all-targets -- -D warnings`
+- **Tests** — `cargo test`
+- **Build** — `cargo build --release`
+- **Publish** — `docker build` + `docker push` в **GHCR**: `ghcr.io/xem1zo/hello-rust:latest`
 
 ## 📂 Структура проекта
 
-```text
-.
-├── .github/workflows/ci.yml   # Конфигурация CI (GitHub Actions)
+```
+hello-rust/
+├── .github/workflows/ci.yml
 ├── src/
-│   ├── main.rs                # Точка входа (CLI приложение)
-│   └── lib.rs                 # Библиотечная логика + Unit-тесты
+│   ├── main.rs
+│   └── lib.rs
 ├── tests/
-│   └── integration.rs         # Интеграционные тесты
-├── Cargo.toml                 # Манифест проекта и настройки релиза
-├── Dockerfile                 # Инструкция для сборки Docker образа
+│   └── integration.rs
+├── .gitignore
+├── .dockerignore
+├── Dockerfile
+├── Cargo.toml
 └── README.md
 ```
-![Структура проекта](2026-09-22_12-49-45.png)
 
-## 🛠 Локальный запуск
+## 🦀 Основной код
 
-### Вариант 1: Через Docker (Рекомендуется)
-Не требует установки Rust на компьютер.
+**`src/lib.rs`:**
+```rust
+pub fn greet(name: &str) -> String {
+    format!("Hello, {}!", name)
+}
+
+pub fn sum_range(from: i64, to: i64) -> i64 {
+    (from..=to).sum()
+}
+```
+
+**`src/main.rs`:**
+```rust
+use hello_rust::{greet, sum_range};
+
+fn main() {
+    println!("Hello from Rust in Docker! 🦀🐳");
+    println!("OS: {}", std::env::consts::OS);
+    println!("Arch: {}", std::env::consts::ARCH);
+    println!("{}", greet("Docker"));
+    println!("Sum 1..10 = {}", sum_range(1, 10));
+}
+```
+
+## 🚀 Запуск локально
+
+### Сборка и запуск Docker-образа
 
 ```bash
-# 1. Сборка образа
 docker build -t hello-rust .
-
-
-# 2. Запуск контейнера
 docker run --rm hello-rust
 ```
 
-**Ожидаемый вывод:**
-```text
+Ожидаемый вывод:
+```
 Hello from Rust in Docker! 🦀🐳
 OS: linux
 Arch: x86_64
@@ -60,44 +77,37 @@ Hello, Docker!
 Sum 1..10 = 55
 ```
 
-![сборка образа и запуск](2026-09-22_13-04-27.png)
-![З](2026-09-22_13-04-27.png)
-
-
-
-### Вариант 2: Локально (через Cargo)
-Если у вас установлен Rust toolchain:
+### Скачать образ из GHCR
 
 ```bash
-cargo run
-# Или запуск тестов:
-cargo test
+docker pull ghcr.io/xem1zo/hello-rust:latest
+docker run --rm ghcr.io/xem1zo/hello-rust
 ```
- Создание пустого репозитория на GitHub
-Создайте пустой репозиторий hello-rust на GitHub.
 
-⚠️ Не добавляйте README, .gitignore и лицензию — иначе push будет отклонён.
+## 📸 Результат запуска
 
-6. Запушить проект
-Находясь в каталоге проекта, выполнить последовательно:
+![Вывод приложения](terminal.png)
 
-cd ~/hello-rust && git init && git add . && git commit -m "Initial commit: Rust app with Docker and CI" && git branch -M main
+## ✅ Результат
 
-git remote add origin https://github.com/<ВАШ-USERNAME>/hello-rust.git
+При push в ветку `main`:
+- Все проверки проходят ✅
+- Docker-образ автоматически публикуется в **GHCR**
+- Образ доступен по адресу: `ghcr.io/xem1zo/hello-rust:latest`
 
-где ВАШ-USERNAME — ваш логин на GitHub
+**Ссылка на Actions:**  
+https://github.com/xem1zo/hello-rust/actions
 
-git push -u origin main
+**Пакет в GHCR:**  
+https://github.com/xem1zo?tab=packages
 
-После push откройте вкладку Actions в GitHub — workflow «Rust CI» запустится автоматически.
+## 📝 Вывод
 
-![Загруска на репозиторий](2026-09-22_13-13-06.png)
+В ходе работы я освоил:
 
-## ⚙️ CI Pipeline (GitHub Actions)
-
-
-![Провека](2026-09-22_13-15-33.png)
-
----
-
-*Created by [kotokhin98-netizen](https://github.com/kotokhin98-netizen)*
+- Настройку CI/CD в GitHub Actions
+- Публикацию Docker-образа в GHCR через `GITHUB_TOKEN`
+- `docker/metadata-action` для автоматических тегов (SHA + latest)
+- `docker/build-push-action` с кэшированием через `type=gha`
+- Разницу между CI (проверка кода) и CI/CD (публикация артефакта)
+- Работу с правами `permissions: packages: write` для публикации
